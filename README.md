@@ -72,3 +72,58 @@ Train baseline and machine learning models, then evaluate performance using ROC-
 
 ### 5. Business Impact Simulation
 Translate model scores into a pre-dispatch review workflow and estimate review workload and potential reduction in address-driven inactive parcels.
+
+---
+
+## Results
+
+### Model Comparison
+
+| Model | Precision | Recall | F1 | AUC |
+|---|---|---|---|---|
+| Rule-based Baseline | 0.93 | 0.30 | 0.46 | 0.65 |
+| Logistic Regression | 0.64 | 0.44 | 0.52 | 0.74 |
+| XGBoost (Structured) | 0.80 | 0.41 | 0.54 | 0.73 |
+| **XGBoost (Fused) — Final** | **0.81** | **0.52** | **0.64** | **0.77** |
+
+Final model evaluated on held-out test set (4,500 parcels, never seen during training).
+
+### Key Finding
+Combining structured validation features with sentence embeddings (all-MiniLM-L6-v2) outperformed structured features alone, confirming that semantic signals in address text carry predictive value beyond explicit validation rules.
+
+---
+
+## Business Impact Simulation
+
+Simulating a pre-dispatch review workflow on 4,500 test parcels:
+
+| Review Rate | Parcels Reviewed | Risky Caught | Recall | Precision |
+|---|---|---|---|---|
+| 5% | 225 | 225 | 25.0% | 100.0% |
+| **10%** | **450** | **433** | **48.1%** | **96.2%** |
+| 15% | 675 | 479 | 53.2% | 71.0% |
+| 20% | 900 | 512 | 56.9% | 56.9% |
+
+**Recommended operating point: 10% review rate**
+- Review only 10% of daily parcel volume
+- Intercept ~48% of risky addresses before dispatch
+- 96% Precision — minimal wasted review effort
+
+At scale (50K daily parcels): reviewing 5,000 parcels/day intercepts ~4,800 risky addresses pre-dispatch.
+
+---
+
+## Limitations
+
+- **Synthetic data ceiling:** Error injection follows deterministic patterns, limiting model generalizability. In production with real customer-entered addresses — which contain richer linguistic variation — text embeddings are expected to capture stronger signals.
+- **No reference database:** A real deployment would cross-validate addresses against a postal reference dataset (e.g., USPS), adding significant predictive power.
+- **Label design:** Risk labels were designed based on operational observation, not ground-truth delivery outcomes.
+
+This project demonstrates the methodology. Performance figures reflect synthetic data constraints, not production expectations.
+
+---
+
+## References
+
+- Eroglu et al. (2025). *Predictive Machine Learning Framework for Address Error Detection in Logistics Systems.* IEEE UBMK.
+- Swamy et al. (2025). *An Address Intelligence Framework for E-commerce Deliveries.* EMNLP Industry Track.
